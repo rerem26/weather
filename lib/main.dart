@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 const String apiKey = '7845ba287428b7f0e572b3b55ae2b226';
+
 String apiUrl(String city) =>
     'http://api.openweathermap.org/geo/1.0/direct?q=$city&limit=1&appid=$apiKey';
 
@@ -43,9 +44,18 @@ class _WeatherAppState extends State<WeatherApp> {
     try {
       final response = await http.get(Uri.parse(apiUrl(city)));
       if (response.statusCode == 200) {
-        setState(() {
-          _weatherData = json.decode(response.body);
-        });
+        final decodedData = json.decode(response.body);
+        if (decodedData is List && decodedData.isNotEmpty) {
+          setState(() {
+            _weatherData = decodedData[0]; // Assuming the first item in the list contains the desired weather information
+          });
+        } else if (decodedData is Map<String, dynamic>) {
+          setState(() {
+            _weatherData = decodedData;
+          });
+        } else {
+          throw Exception('Unexpected data format');
+        }
       } else {
         throw Exception('Failed to load weather data');
       }
@@ -89,108 +99,108 @@ class _WeatherAppState extends State<WeatherApp> {
             SizedBox(height: 20),
             _weatherData == null
                 ? CircularProgressIndicator()
-                : _weatherData!.isEmpty
-                    ? Text('No data available for this city')
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Card(
-                            elevation: 4,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    'Temperature',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    '${_weatherData!['main']['temp']}°C',
-                                    style: TextStyle(fontSize: 24),
-                                  ),
-                                ],
-                              ),
-                            ),
+                : _weatherData!.isEmpty || _weatherData!['main'] == null
+                ? Text('No data available for this city')
+                : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Temperature',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                          SizedBox(height: 10),
-                          Card(
-                            elevation: 4,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    'Humidity',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    '${_weatherData!['main']['humidity']}%',
-                                    style: TextStyle(fontSize: 24),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          '${_weatherData!['main']!['temp']}°C',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Humidity',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                          SizedBox(height: 10),
-                          Card(
-                            elevation: 4,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    'Description',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    '${_weatherData!['weather'][0]['description']}',
-                                    style: TextStyle(fontSize: 24),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          '${_weatherData!['main']!['humidity']}%',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Description',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                          SizedBox(height: 10),
-                          Card(
-                            elevation: 4,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    'Wind Speed',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    '${_weatherData!['wind']['speed']} m/s',
-                                    style: TextStyle(fontSize: 24),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          '${_weatherData!['weather']![0]['description']}',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Wind Speed',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          '${_weatherData!['wind']!['speed']} m/s',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
