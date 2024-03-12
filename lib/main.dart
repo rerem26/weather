@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 const String apiKey = '7845ba287428b7f0e572b3b55ae2b226';
-
 String apiUrl(String city) =>
-    'http://api.openweathermap.org/geo/1.0/direct?q=$city&limit=1&appid=$apiKey';
+    'http://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric';
 
 void main() {
   runApp(MyApp());
@@ -32,7 +31,7 @@ class WeatherApp extends StatefulWidget {
 }
 
 class _WeatherAppState extends State<WeatherApp> {
-  Map<String, dynamic>? _weatherData;
+  Map<String, dynamic> _weatherData = {};
   TextEditingController _cityController = TextEditingController();
 
   @override
@@ -44,26 +43,14 @@ class _WeatherAppState extends State<WeatherApp> {
     try {
       final response = await http.get(Uri.parse(apiUrl(city)));
       if (response.statusCode == 200) {
-        final decodedData = json.decode(response.body);
-        if (decodedData is List && decodedData.isNotEmpty) {
-          setState(() {
-            _weatherData = decodedData[0]; // Assuming the first item in the list contains the desired weather information
-          });
-        } else if (decodedData is Map<String, dynamic>) {
-          setState(() {
-            _weatherData = decodedData;
-          });
-        } else {
-          throw Exception('Unexpected data format');
-        }
+        setState(() {
+          _weatherData = json.decode(response.body);
+        });
       } else {
         throw Exception('Failed to load weather data');
       }
     } catch (e) {
       print('Error: $e');
-      setState(() {
-        _weatherData = null;
-      });
     }
   }
 
@@ -97,10 +84,8 @@ class _WeatherAppState extends State<WeatherApp> {
               child: Text('Search'),
             ),
             SizedBox(height: 20),
-            _weatherData == null
+            _weatherData.isEmpty
                 ? CircularProgressIndicator()
-                : _weatherData!.isEmpty || _weatherData!['main'] == null
-                ? Text('No data available for this city')
                 : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -120,7 +105,7 @@ class _WeatherAppState extends State<WeatherApp> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          '${_weatherData!['main']!['temp']}°C',
+                          '${_weatherData['main']['temp']}°C',
                           style: TextStyle(fontSize: 24),
                         ),
                       ],
@@ -144,7 +129,7 @@ class _WeatherAppState extends State<WeatherApp> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          '${_weatherData!['main']!['humidity']}%',
+                          '${_weatherData['main']['humidity']}%',
                           style: TextStyle(fontSize: 24),
                         ),
                       ],
@@ -168,7 +153,7 @@ class _WeatherAppState extends State<WeatherApp> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          '${_weatherData!['weather']![0]['description']}',
+                          '${_weatherData['weather'][0]['description']}',
                           style: TextStyle(fontSize: 24),
                         ),
                       ],
@@ -192,7 +177,7 @@ class _WeatherAppState extends State<WeatherApp> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          '${_weatherData!['wind']!['speed']} m/s',
+                          '${_weatherData['wind']['speed']} m/s',
                           style: TextStyle(fontSize: 24),
                         ),
                       ],
